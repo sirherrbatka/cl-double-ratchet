@@ -25,6 +25,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (:import-from #:serapeum
                 #:vector=
                 #:make
+                #:vect
                 #:lret
                 #:~>)
   (:local-nicknames

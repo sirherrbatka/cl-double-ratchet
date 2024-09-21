@@ -116,9 +116,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :accessor remote-client)
    (%message-class
     :initarg :message-class
-    :reader message-class))
+    :reader message-class)
+   (%pending-messages-start
+    :initarg :pending-messages-start
+    :accessor pending-messages-start)
+   (%pending-messages
+    :initarg :pending-messages
+    :reader pending-messages))
   (:default-initargs
    :message-class 'message
+   :pending-messages (vect)
+   :pending-messages-start 0
    :lock (bt2:make-lock)))
 
 (defclass message ()
