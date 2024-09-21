@@ -1,77 +1,136 @@
+#|
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1) Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2) Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+|#
 (cl:in-package #:double-ratchet)
 
 
-(defclass key-pair ()
-  ((%private :initarg :private
-             :initform nil
-             :accessor private)
-   (%public :initarg :public
-            :initform nil
-            :accessor public)))
-
-(defclass chain ()
-  ((%kdf :initarg :kdf
-         :reader kdf)
-   (%key :initarg :key
-         :accessor key)
-   (%steps :initarg :steps
-           :reader steps
-           :writer write-steps)
-   (%iteration-ocunt :initarg :iteration-count
-                     :reader iteration-count))
+(defclass ratchet ()
+  ((%root-key
+    :initarg :root-key
+    :accessor root-key
+    :accessor rk)
+   (%send-keys
+    :initform nil
+    :initarg :send-keys
+    :accessor send-keys)
+   (%receive-key
+    :initarg :receive-key
+    :initform nil
+    :accessor receive-key)
+   (%chain-key-receive
+    :initarg :chain-key-receive
+    :initform nil
+    :accessor ckr
+    :accessor chain-key-receive)
+   (%chain-key-send
+    :initarg :chain-key-send
+    :initform nil
+    :accessor cks
+    :accessor chain-key-send)
+   (%number-of-sent-messages
+    :initarg :number-of-sent-messages
+    :initform nil
+    :accessor number-of-sent-messages)
+   (%number-of-received-messages
+    :accessor number-of-received-messages
+    :initarg :number-of-received-messages)
+   (%number-of-messages-in-previous-sending-chain
+    :accessor number-of-messages-in-previous-sending-chain
+    :initarg :number-of-messages-in-previous-sending-chain
+    :initform 0)
+   (%constant
+    :initarg :constant
+    :reader constant))
   (:default-initargs
-   :steps 0
-   :iteration-count 4
-   :kdf (ironclad:make-kdf :hmac-kdf :digest :tree-hash)
-   :key (ironclad:make-random-salt)))
-
-(defclass symmetric-ratchet ()
-  ((%chain :initarg :chain
-           :reader chain)
-   (%constant :initarg :constant
-              :reader constant))
-  (:default-initargs
-   :constant (ironclad:make-random-salt 0)))
-
-(defclass diffie-hellman-ratchet ()
-  ((%root-ratchet :initarg :root-ratchet
-                  :reader root-ratchet)
-   (%receiving-ratchet :initarg :receiving-ratchet
-                       :accessor receiving-ratchet)
-   (%sending-ratchet :initarg :sending-ratchet
-                     :accessor sending-ratchet)))
+   :number-of-sent-messages 0
+   :number-of-received-messages 0
+   :root-key nil
+   :constant (ic:make-random-salt 0)))
 
 (defclass client ()
   ((%long-term-identity-key :initarg :long-term-identity-key
                             :reader long-term-identity-key)
+   (%ephemeral-key-1 :initarg :ephemeral-key-1
+                     :accessor ephemeral-key-1)
+   (%ephemeral-key-2 :initarg :ephemeral-key-2
+                     :accessor ephemeral-key-2)
+   (%ephemeral-key-3 :initarg :ephemeral-key-3
+                     :accessor ephemeral-key-3)
+   (%ephemeral-key-4 :initarg :ephemeral-key-4
+                     :accessor ephemeral-key-4)
    (%shared-key :initarg :shared-key
                 :reader shared-key)
    (%keys :initarg :keys
           :accessor keys)
-   (%diffie-hellman-ratchet :initarg :diffie-hellman-ratchet
-                            :accessor diffie-hellman-ratchet))
+   (%ratchet :initarg :ratchet
+             :accessor ratchet))
   (:default-initargs
-   :keys nil
+   :keys (make-25519-keys)
+   :ratchet nil
+   :ephemeral-key-1 (make-25519-keys)
+   :ephemeral-key-2 (make-25519-keys)
+   :ephemeral-key-3 (make-25519-keys)
+   :ephemeral-key-4 (make-25519-keys)
    :long-term-identity-key (make-25519-keys)))
 
 (defclass remote-client (client)
-  ((%signed-pre-key :initarg :signed-pre-key
-                    :reader signed-pre-key)
-   (%one-time-pre-keys :initarg :one-time-pre-keys
-                       :accessor one-time-pre-keys))
-  (:default-initargs
-   :keys (make-25519-keys)
-   :signed-pre-key (make-25519-keys)
-   :one-time-pre-keys (make-25519-keys)))
+  ())
 
 (defclass local-client (client)
-  ((%ephemeral-key :initarg :ephemeral-key
-                   :accessor ephemeral-key))
-  (:default-initargs
-   :ephemeral-key (make-25519-keys)))
+  ())
 
 (defclass session ()
   ((%this-client :initarg :this-client
                  :reader this-client)
    (%other-client :initarg :other-client
                   :reader other-client)))
+
+(defclass double-ratchet ()
+  ((%lock
+    :initarg :lock
+    :reader lock)
+   (%local-client
+    :initarg :local-client
+    :accessor local-client)
+   (%remote-client
+    :initarg :remote-client
+    :accessor remote-client)
+   (%message-class
+    :initarg :message-class
+    :reader message-class))
+  (:default-initargs
+   :message-class 'message
+   :lock (bt2:make-lock)))
+
+(defclass message ()
+  ((%send-key
+    :initarg :send-key
+    :reader message-send-key)
+   (%number
+    :initarg :number
+    :reader message-number)
+   (%message-count-in-previous-sending-chain
+    :initarg :message-count-in-previous-sending-chain
+    :reader message-count-in-previous-sending-chain)
+   (%content
+    :initarg :content
+    :reader message-content)))
