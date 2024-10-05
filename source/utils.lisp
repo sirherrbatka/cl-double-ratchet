@@ -35,11 +35,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defun padding-bytes-count (length)
   (- 16 (mod length 16)))
 
-(defun make-padded-vector-for-length (length)
-  (let ((padding-bytes-count (padding-bytes-count length)))
-    (make-array (+ length padding-bytes-count)
-                :element-type '(unsigned-byte 8)
-                :initial-element padding-bytes-count)))
+(defun make-padded-vector-for-length (length &key initial-contents)
+  (let* ((padding-bytes-count (padding-bytes-count length))
+         (result (make-array (+ length padding-bytes-count)
+                             :element-type '(unsigned-byte 8)
+                             :initial-element padding-bytes-count)))
+    (replace result initial-contents)
+    result))
 
 (defun padded-vector-size (vector)
   (check-type vector (simple-array (unsigned-byte 8) (*)))

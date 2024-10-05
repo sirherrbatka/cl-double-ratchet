@@ -101,7 +101,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 ciphertext
                 :start start
                 :end end)
-    ciphertext))
+    (values ciphertext
+            start
+            (+ start (aref ciphertext (1- end))))))
 
 (defmethod dh-ratchet ((this-client client)
                        public-key
@@ -140,6 +142,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               0
               (length message))
     (make-message (message-class double-ratchet)
+                  :send-key (~> double-ratchet local-client ratchet send-keys get-public-key)
                   :content message
                   :number (~> double-ratchet local-client ratchet number-of-sent-messages)
                   :message-count-in-previous-sending-chain (~> double-ratchet local-client ratchet number-of-messages-in-previous-sending-chain))))
@@ -164,3 +167,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmethod can-encrypt-p ((object client))
   (~> object ratchet cks null not))
+
+(defmethod message-content ((message message))
+  (let ((result (read-message-content message)))
+    (values result 0 (length result))))

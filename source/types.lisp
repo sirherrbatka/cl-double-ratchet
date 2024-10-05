@@ -84,13 +84,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (%ratchet :initarg :ratchet
              :accessor ratchet))
   (:default-initargs
-   :keys (make-25519-keys)
+   :keys (make-25519-private-key)
    :ratchet nil
-   :ephemeral-key-1 (make-25519-keys)
-   :ephemeral-key-2 (make-25519-keys)
-   :ephemeral-key-3 (make-25519-keys)
-   :ephemeral-key-4 (make-25519-keys)
-   :long-term-identity-key (make-25519-keys)))
+   :ephemeral-key-1 (make-25519-private-key)
+   :ephemeral-key-2 (make-25519-private-key)
+   :ephemeral-key-3 (make-25519-private-key)
+   :ephemeral-key-4 (make-25519-private-key)
+   :long-term-identity-key (make-25519-private-key)))
 
 (defclass remote-client (client)
   ())
@@ -141,4 +141,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :reader message-count-in-previous-sending-chain)
    (%content
     :initarg :content
-    :reader message-content)))
+    :reader read-message-content)))
