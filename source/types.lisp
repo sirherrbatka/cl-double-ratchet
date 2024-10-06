@@ -110,9 +110,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :accessor messages)
    (%messages-start
     :initarg :messages-start
-    :accessor messages-start))
+    :accessor messages-start)
+   (%end
+    :initarg :end
+    :accessor end))
   (:default-initargs
    :messages (vect)
+   :end 0
    :messages-start 0))
 
 (defclass double-ratchet ()
