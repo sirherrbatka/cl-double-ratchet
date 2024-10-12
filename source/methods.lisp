@@ -72,7 +72,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                      end)
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key initialization-vector) (kdf-ck ratchet (cks ratchet))))
-    (incf (number-of-sent-messages ratchet))
+    (setf #1=(number-of-sent-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
     (setf (cks ratchet) chain-key)
     (ic:encrypt-in-place (ic:make-cipher :aes
                                          :key message-key
@@ -91,16 +91,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                      end)
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key iv) (kdf-ck ratchet (ckr ratchet))))
-    (setf (ckr ratchet) chain-key)
-    (incf (number-of-received-messages ratchet))
     (ic:decrypt-in-place (ic:make-cipher :aes
-                                :key message-key
-                                :mode :cbc
-                                :padding :pkcs7
-                                :initialization-vector iv)
-                ciphertext
-                :start start
-                :end end)
+                                         :key message-key
+                                         :mode :cbc
+                                         :padding :pkcs7
+                                         :initialization-vector iv)
+                         ciphertext
+                         :start start
+                         :end end)
+    (setf (ckr ratchet) chain-key
+          #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
     (values ciphertext
             start
             (+ start (aref ciphertext (1- end))))))
@@ -160,10 +160,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defmethod decrypt ((double-ratchet double-ratchet)
                     message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (dh-ratchet (local-client double-ratchet)
-                (~> message message-send-key)
-                (message-number message)
-                (message-count-in-previous-sending-chain message))
+    (unless (~> double-ratchet local-client ratchet ckr)
+      (dh-ratchet (local-client double-ratchet)
+                  (~> message message-send-key)
+                  (message-number message)
+                  (message-count-in-previous-sending-chain message)))
     (bind (((:values ciphertext start size) (message-content message)))
       (decrypt* (local-client double-ratchet)
                 (remote-client double-ratchet)
@@ -181,3 +182,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defmethod message-content ((message message))
   (let ((result (read-message-content message)))
     (values result 0 (length result))))
+
+(defmethod clone ((object ratchet))
+  (make-instance 'ratchet
+                 :root-key (root-key object)
+                 :send-keys (send-keys object)
+                 :receive-key (receive-key object)
+                 :chain-key-receive (ckr object)
+                 :chain-key-send (cks object)
+                 :number-of-sent-messages (number-of-sent-messages object)
+                 :number-of-received-messages (number-of-received-messages object)
+                 :number-of-messages-in-previous-sending-chain (number-of-messages-in-previous-sending-chain object)
+                 :content (constant object)))
