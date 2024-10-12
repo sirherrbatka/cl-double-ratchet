@@ -47,8 +47,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                    (make 'ratchet
                                          :root-key rk
                                          :chain-key-send cks
-                                         :send-keys (ephemeral-key-1 client-a)
-                                         :receive-key (ephemeral-key-1 client-b)
+                                         :sending-keys (ephemeral-key-1 client-a)
+                                         :received-key (ephemeral-key-1 client-b)
                                          :chain-key-receive nil))))
       (let* ((dh1 (exchange-25519-key (~> client-a ephemeral-key-1)
                                       (~> client-b long-term-identity-key get-public-key)))
@@ -62,7 +62,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               (slot-value client-b '%shared-key) (slot-value client-a '%shared-key)
               (ratchet client-a) (make 'ratchet
                                        :root-key (slot-value client-a '%shared-key)
-                                       :send-keys (~> client-a ephemeral-key-1)))))
+                                       :sending-keys (~> client-a ephemeral-key-1)))))
   nil)
 
 (defmethod encrypt* ((this-client client)
@@ -110,8 +110,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                        number-of-sent-messages
                        number-of-messages-in-previous-sending-chain)
   (let ((ratchet (ratchet this-client)))
-    (when (and (not (null (receive-key ratchet)))
-               (vector= (ironclad:curve25519-key-y (receive-key ratchet))
+    (when (and (not (null (received-key ratchet)))
+               (vector= (ironclad:curve25519-key-y (received-key ratchet))
                         (ironclad:curve25519-key-y public-key)))
       (return-from dh-ratchet nil))
     (shiftf (number-of-messages-in-previous-sending-chain ratchet)
@@ -119,16 +119,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             0)
     (bind (((:values rk ckr)
             (kdf-rk (rk ratchet)
-                    (exchange-25519-key (~> ratchet send-keys)
+                    (exchange-25519-key (~> ratchet sending-keys)
                                         public-key))))
       (setf (receive-key ratchet) public-key
             (root-key ratchet) rk
             (ckr ratchet) ckr
-            (send-keys ratchet) (make-25519-private-key)))
+            (sending-keys ratchet) (make-25519-private-key)))
     (bind (((:values rk cks)
             (kdf-rk (rk ratchet)
-                    (exchange-25519-key (~> ratchet send-keys)
-                                        (receive-key ratchet)))))
+                    (exchange-25519-key (~> ratchet sending-keys)
+                                        (received-key ratchet)))))
       (setf (root-key ratchet) rk
             (cks ratchet) cks)))
   nil)
@@ -142,11 +142,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               0
               (length message))
     (make-message (message-class double-ratchet)
-                  :send-key (~> double-ratchet
-                                local-client
-                                ratchet
-                                send-keys
-                                get-public-key)
+                  :sending-key (~> double-ratchet
+                                   local-client
+                                   ratchet
+                                   sending-keys
+                                   get-public-key)
                   :content message
                   :number (~> double-ratchet
                               local-client
@@ -162,7 +162,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bt2:with-lock-held ((lock double-ratchet))
     (unless (~> double-ratchet local-client ratchet ckr)
       (dh-ratchet (local-client double-ratchet)
-                  (~> message message-send-key)
+                  (~> message message-sending-key)
                   (message-number message)
                   (message-count-in-previous-sending-chain message)))
     (bind (((:values ciphertext start size) (message-content message)))
@@ -186,8 +186,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defmethod clone ((object ratchet))
   (make-instance 'ratchet
                  :root-key (root-key object)
-                 :send-keys (send-keys object)
-                 :receive-key (receive-key object)
+                 :sending-keys (sending-keys object)
+                 :received-key (received-key object)
                  :chain-key-receive (ckr object)
                  :chain-key-send (cks object)
                  :number-of-sent-messages (number-of-sent-messages object)

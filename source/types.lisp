@@ -28,14 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :initarg :root-key
     :accessor root-key
     :accessor rk)
-   (%send-keys
+   (%sending-keys
     :initform nil
-    :initarg :send-keys
-    :accessor send-keys)
-   (%receive-key
-    :initarg :receive-key
+    :initarg :sending-keys
+    :accessor sending-keys)
+   (%received-key
+    :initarg :received-key
     :initform nil
-    :accessor receive-key)
+    :accessor received-key)
    (%chain-key-receive
     :initarg :chain-key-receive
     :initform nil
@@ -141,9 +141,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    :lock (bt2:make-lock)))
 
 (defclass message ()
-  ((%send-key
-    :initarg :send-key
-    :reader message-send-key)
+  ((%sending-key
+    :initarg :sending-key
+    :reader message-sending-key)
    (%number
     :initarg :number
     :reader message-number)
