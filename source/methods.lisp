@@ -86,8 +86,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                      ciphertext
                      start
                      end)
-  (bind ((ratchet (ratchet this-client)))
-    (decrypt-imlementation ratchet ciphertext start end)))
+  (bind ((ratchet (ratchet this-client))
+         ((:values chain-key message-key iv) (kdf-ck ratchet (ckr ratchet)))
+         ((:values result start end) (decrypt-imlementation message-key iv ciphertext start end)))
+    (setf (ckr ratchet) chain-key
+          #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
+    (values result start end)))
 
 (defmethod dh-ratchet ((this-client client)
                        public-key
@@ -152,10 +156,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
       (if vector
           (values vector start end)
-          (bind (((:values ciphertext start end) (message-content message)))
-            (decrypt* (local-client double-ratchet)
-                      (remote-client double-ratchet)
-                      ciphertext start end))))))
+          (progn
+            (skip-message (message-number message))
+            (bind (((:values ciphertext start end) (message-content message)))
+              (decrypt* (local-client double-ratchet)
+                        (remote-client double-ratchet)
+                        ciphertext start end)))))))
 
 (defmethod long-term-identity-remote-key ((object double-ratchet))
   (~> object remote-client long-term-identity-key get-public-key))
@@ -173,29 +179,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defmethod try-skipped-messages ((double-ratchet double-ratchet) message)
   (bind (((:values ciphertext start end) (message-content message))
          (number (message-number message))
-         (key (message-sending-key message))
+         (key (~> double-ratchet local-client ratchet received-key))
          (index (cons number key))
-         ((:values state found) (~> double-ratchet
-                                    local-client
-                                    skipped-messages
-                                    (cl-ds:at index))))
+         ((:values message-key.iv found) (~> double-ratchet
+                                             local-client
+                                             skipped-messages
+                                             (cl-ds:at index))))
     (if found
-        (progn
+        (bind (((message-key . iv) message-key.iv))
           (~> double-ratchet local-client skipped-messages (cl-ds:erase! index))
-          (decrypt-imlementation state ciphertext start end))
+          (decrypt-imlementation message-key iv ciphertext start end))
         nil)))
 
 (defmethod skip-message ((double-ratchet double-ratchet) until)
   (bind (((:accessors (number-of-received-messages number-of-received-messages)
-                      (constant constant))
+                      (constant constant)
+                      (ckr ckr))
           (~> double-ratchet local-client ratchet))
          (ratchet (~> double-ratchet local-client ratchet))
          (skipped (~> double-ratchet local-client skipped-messages)))
     (iterate
-      (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum))
       (while (< number-of-received-messages until))
-      (for (values chain-key message-key iv) = (kdf-ck ratchet (ckr ratchet)))
-      (setf (cl-ds:at skipped (cons number-of-received-messages chain-key))
-            (make 'state :number-of-received-messages number-of-received-messages
-                         :chain-key-receive message-key
-                         :constant constant)))))
+      (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
+      (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum))
+      (setf ckr chain-key)
+      (setf (cl-ds:at skipped (cons number-of-received-messages chain-key)) (cons message-key iv)))))
