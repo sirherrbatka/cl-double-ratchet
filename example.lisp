@@ -1,3 +1,5 @@
+(ql:quickload :cl-double-ratchet)
+
 (cl:in-package #:double-ratchet)
 
 

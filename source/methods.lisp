@@ -25,11 +25,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmethod exchange-keys* ((client-a local-client)
                            (client-b client))
-  (if (iterate
-        (for a in-vector (~> client-a long-term-identity-key ic:curve25519-key-y))
-        (for b in-vector (~> client-b long-term-identity-key ic:curve25519-key-y))
-        (finding t such-that (> a b))
-        (finding nil such-that (< a b)))
+  (if (vector< (~> client-a long-term-identity-key ic:curve25519-key-y)
+               (~> client-b long-term-identity-key ic:curve25519-key-y))
       (let* ((dh1 (exchange-25519-key (~> client-a long-term-identity-key)
                                       (~> client-b ephemeral-key-1 get-public-key)))
              (dh2 (exchange-25519-key (~> client-a ephemeral-key-2)
@@ -165,10 +162,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                   (~> message message-sending-key)
                   (message-number message)
                   (message-count-in-previous-sending-chain message)))
-    (bind (((:values ciphertext start size) (message-content message)))
-      (decrypt* (local-client double-ratchet)
-                (remote-client double-ratchet)
-                ciphertext start (+ start size)))))
+    (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
+      (if vector
+          (values vector start end)
+          (bind (((:values ciphertext start end) (message-content message)))
+            (decrypt* (local-client double-ratchet)
+                      (remote-client double-ratchet)
+                      ciphertext start end))))))
 
 (defmethod long-term-identity-remote-key ((object double-ratchet))
   (~> object remote-client long-term-identity-key get-public-key))
@@ -183,14 +183,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (let ((result (read-message-content message)))
     (values result 0 (length result))))
 
-(defmethod clone ((object ratchet))
-  (make-instance 'ratchet
-                 :root-key (root-key object)
-                 :sending-keys (sending-keys object)
-                 :received-key (received-key object)
-                 :chain-key-receive (ckr object)
-                 :chain-key-send (cks object)
-                 :number-of-sent-messages (number-of-sent-messages object)
-                 :number-of-received-messages (number-of-received-messages object)
-                 :number-of-messages-in-previous-sending-chain (number-of-messages-in-previous-sending-chain object)
-                 :content (constant object)))
+(defmethod try-skipped-messages ((double-ratchet double-ratchet) message)
+  (bind (((:values ciphertext start end) (message-content message))
+         (number (message-number message))
+         (key (message-sending-key message))
+         (index (cons number key))
+         ((:values state found) (~> double-ratchet local-client skipped-messages
+                                      (cl-ds:at index))))
+    (if found
+        (progn
+          (~> double-ratchet local-client skipped-messages (cl-ds:erase! index))
+          (decrypt-imlementation state ciphertext start end))
+        nil)))
+
+(defmethod skip-message ((double-ratchet double-ratchet) until)
+  cl-ds.utils:todo)

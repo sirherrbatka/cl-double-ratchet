@@ -61,4 +61,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (declare (ignore send-key number message-count-in-previous-sending-chain content))
     (apply #'make class-name rest)))
 (defgeneric message-class (double-ratchet))
-(defgeneric clonee (object))
+(defgeneric try-skipped-messages (double-ratchet message))
+(defgeneric skip-message (double-ratchet until))

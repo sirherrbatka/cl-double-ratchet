@@ -23,6 +23,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (cl:in-package #:double-ratchet)
 
 
+(defclass state ()
+  ((%chain-key-receive
+    :initarg :chain-key-receive
+    :initform nil
+    :accessor ckr
+    :accessor chain-key-receive)
+   (%constant
+    :initarg :constant
+    :reader constant)))
+
 (defclass ratchet ()
   ((%root-key
     :initarg :root-key
@@ -81,9 +91,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 :reader shared-key)
    (%keys :initarg :keys
           :accessor keys)
+   (%skipped-messages :initarg :skipped-messages
+                      :reader skipped-messages)
    (%ratchet :initarg :ratchet
              :accessor ratchet))
   (:default-initargs
+   :skipped-messages (cl-ds.dicts.skip-list:make-mutable-skip-list-dictionary #'key-ordering
+                                                                              #'equalp)
    :keys (make-25519-private-key)
    :ratchet nil
    :ephemeral-key-1 (make-25519-private-key)
@@ -104,21 +118,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (%other-client :initarg :other-client
                   :reader other-client)))
 
-(defclass pending-messages ()
-  ((%messages
-    :initarg :messages
-    :accessor messages)
-   (%messages-start
-    :initarg :messages-start
-    :accessor messages-start)
-   (%end
-    :initarg :end
-    :accessor end))
-  (:default-initargs
-   :messages (vect)
-   :end 0
-   :messages-start 0))
-
 (defclass double-ratchet ()
   ((%lock
     :initarg :lock
@@ -131,13 +130,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :accessor remote-client)
    (%message-class
     :initarg :message-class
-    :reader message-class)
-   (%pending-messages
-    :initarg :pending-messages
-    :reader pending-messages))
+    :reader message-class))
   (:default-initargs
    :message-class 'message
-   :pending-messages (make-instance 'pending-messages)
    :lock (bt2:make-lock)))
 
 (defclass message ()

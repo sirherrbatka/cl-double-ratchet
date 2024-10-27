@@ -71,3 +71,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                8
                                80)))
     (values (subseq output 0 32) (subseq output 32 64) (subseq output 64))))
+
+(defun decrypt-imlementation (state ciphertext start end)
+  (bind (((:values chain-key message-key iv) (kdf-ck state (ckr state))))
+    (ic:decrypt-in-place (ic:make-cipher :aes
+                                         :key message-key
+                                         :mode :cbc
+                                         :padding :pkcs7
+                                         :initialization-vector iv)
+                         ciphertext
+                         :start start
+                         :end end)
+    (setf (ckr state) chain-key
+          #1=(number-of-received-messages state) (mod (1+ #1#) most-positive-fixnum))
+    (values ciphertext
+            start
+            (+ start (aref ciphertext (1- end))))))

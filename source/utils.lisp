@@ -69,3 +69,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       (let* ((y (ic:curve25519-key-y key))
              (public (ic:make-public-key :curve25519 :y y)))
         public)))
+
+(defun vector< (vector-a vector-b)
+  (iterate
+    (for a in-vector vector-a)
+    (for b in-vector vector-b)
+    (finding t such-that (> a b))
+    (finding nil such-that (< a b))))
+
+(defun key-ordering (a b)
+  (or (< (car a) (car b))
+      (and (= (car a) (car b))
+           (vector< (ic:curve25519-key-y (cdr a))
+                    (ic:curve25519-key-y (cdr b))))))
