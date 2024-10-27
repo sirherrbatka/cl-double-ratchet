@@ -175,8 +175,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          (number (message-number message))
          (key (message-sending-key message))
          (index (cons number key))
-         ((:values state found) (~> double-ratchet local-client skipped-messages
-                                      (cl-ds:at index))))
+         ((:values state found) (~> double-ratchet
+                                    local-client
+                                    skipped-messages
+                                    (cl-ds:at index))))
     (if found
         (progn
           (~> double-ratchet local-client skipped-messages (cl-ds:erase! index))

@@ -29,6 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :initform nil
     :accessor ckr
     :accessor chain-key-receive)
+   (%number-of-received-messages
+    :accessor number-of-received-messages
+    :initarg :number-of-received-messages)
    (%constant
     :initarg :constant
     :reader constant)))
