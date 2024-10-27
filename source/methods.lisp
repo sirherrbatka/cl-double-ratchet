@@ -201,6 +201,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (iterate
       (while (< number-of-received-messages until))
       (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
-      (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum))
-      (setf ckr chain-key)
+      (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum)
+            ckr chain-key)
       (setf (cl-ds:at skipped (cons number-of-received-messages chain-key)) (cons message-key iv)))))
