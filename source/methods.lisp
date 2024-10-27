@@ -186,4 +186,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         nil)))
 
 (defmethod skip-message ((double-ratchet double-ratchet) until)
-  cl-ds.utils:todo)
+  (bind (((:accessors (number-of-received-messages number-of-received-messages)
+                      (constant constant))
+          (~> double-ratchet local-client ratchet))
+         (ratchet (~> double-ratchet local-client ratchet))
+         (skipped (~> double-ratchet local-client skipped-messages)))
+    (iterate
+      (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum))
+      (while (< number-of-received-messages until))
+      (for (values chain-key message-key iv) = (kdf-ck ratchet (ckr ratchet)))
+      (setf (cl-ds:at skipped (cons number-of-received-messages chain-key))
+            (make 'state :number-of-received-messages number-of-received-messages
+                         :chain-key-receive message-key
+                         :constant constant)))))
