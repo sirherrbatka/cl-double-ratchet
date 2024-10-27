@@ -86,21 +86,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                      ciphertext
                      start
                      end)
-  (bind ((ratchet (ratchet this-client))
-         ((:values chain-key message-key iv) (kdf-ck ratchet (ckr ratchet))))
-    (ic:decrypt-in-place (ic:make-cipher :aes
-                                         :key message-key
-                                         :mode :cbc
-                                         :padding :pkcs7
-                                         :initialization-vector iv)
-                         ciphertext
-                         :start start
-                         :end end)
-    (setf (ckr ratchet) chain-key
-          #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
-    (values ciphertext
-            start
-            (+ start (aref ciphertext (1- end))))))
+  (bind ((ratchet (ratchet this-client)))
+    (decrypt-imlementation ratchet ciphertext start end)))
 
 (defmethod dh-ratchet ((this-client client)
                        public-key
