@@ -41,4 +41,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:message-count-in-previous-sending-chain
    #:message-content
    #:make-padded-vector
+   #:can-encrypt-p
    ))
