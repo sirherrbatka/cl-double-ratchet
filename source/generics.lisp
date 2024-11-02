@@ -43,10 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defgeneric exchange-keys* (this-client other-client))
 (defgeneric encrypt* (this-client message start end))
 (defgeneric decrypt* (this-client cipher-text start end))
-(defgeneric dh-ratchet (this-client
-                        public-key
-                        number-of-sent-messages
-                        number-of-messages-in-previous-sending-chain))
+(defgeneric dh-ratchet (this-client public-key number-of-messages-in-previous-sending-chain))
 (defgeneric encrypt (double-ratchet message))
 (defgeneric decrypt (double-ratchet data))
 (defgeneric long-term-identity-remote-key (double-ratchet))

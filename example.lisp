@@ -3,8 +3,8 @@
 (cl:in-package #:double-ratchet)
 
 
-(defparameter *client-a* (make-local-client (make-25519-private-key)))
-(defparameter *client-b* (make-local-client (make-25519-private-key)))
+(defparameter *client-a* (make-client (make-25519-private-key)))
+(defparameter *client-b* (make-client (make-25519-private-key)))
 
 (exchange-keys* *client-a* *client-b*)
 (exchange-keys* *client-b* *client-a*)

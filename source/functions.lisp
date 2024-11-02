@@ -42,8 +42,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         (public (ephemeral-key-3 client))
         (public (ephemeral-key-4 client))))
 
-(defun make-local-client (long-term-identity-key)
-  (make-instance 'local-client
+(defun make-client (long-term-identity-key)
+  (make-instance 'client
                  :long-term-identity-key long-term-identity-key))
 
 (defun make-remote-client (public-long-term-identity-key eph1 eph2 eph3 eph4)

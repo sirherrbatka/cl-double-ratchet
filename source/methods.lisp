@@ -93,13 +93,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmethod dh-ratchet ((this-client client)
                        public-key
-                       number-of-sent-messages
                        number-of-messages-in-previous-sending-chain)
   (let ((ratchet (ratchet this-client)))
-    (when (and (not (null (received-key ratchet)))
-               (vector= (ironclad:curve25519-key-y (received-key ratchet))
-                        (ironclad:curve25519-key-y public-key)))
-      (return-from dh-ratchet nil))
     (shiftf (number-of-messages-in-previous-sending-chain ratchet)
             (number-of-sent-messages ratchet)
             0)
@@ -142,15 +137,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defmethod decrypt ((double-ratchet client)
                     message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (unless (~> double-ratchet ratchet ckr)
-      (dh-ratchet double-ratchet
-                  (~> message message-sending-key)
-                  (message-number message)
-                  (message-count-in-previous-sending-chain message)))
     (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
       (if vector
           (values vector start end)
           (progn
+            (when (or (~> double-ratchet ratchet ckr null)
+                      (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
+                                             (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
+              (skip-message double-ratchet (message-count-in-previous-sending-chain message))
+              (dh-ratchet double-ratchet
+                          (~> message message-sending-key)
+                          (message-number message)))
             (skip-message double-ratchet (message-number message))
             (bind (((:values ciphertext start end) (message-content message)))
               (decrypt* double-ratchet
