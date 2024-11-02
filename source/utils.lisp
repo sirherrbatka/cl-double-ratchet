@@ -70,13 +70,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
              (public (ic:make-public-key :curve25519 :y y)))
         public)))
 
-(defun vector< (vector-a vector-b)
-  (iterate
-    (for a in-vector vector-a)
-    (for b in-vector vector-b)
-    (finding t such-that (> a b))
-    (finding nil such-that (< a b))))
-
 (defun key-ordering (a b)
   (< a b))
 

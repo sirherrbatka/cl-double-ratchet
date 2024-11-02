@@ -40,4 +40,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:message-sending-key
    #:message-count-in-previous-sending-chain
    #:message-content
+   #:make-padded-vector
    ))
