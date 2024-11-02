@@ -46,4 +46,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:pkcs7-unpad
    #:padded-vector-size
    #:make-padded-vector-for-length
+   #:new-sending-ratchet
+   #:client-public-keys
    ))

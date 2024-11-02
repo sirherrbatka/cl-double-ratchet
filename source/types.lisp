@@ -72,8 +72,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :initform 0)
    (%constant
     :initarg :constant
-    :reader constant)
-   )
+    :reader constant))
   (:default-initargs
    :number-of-sent-messages 0
    :number-of-received-messages 0
