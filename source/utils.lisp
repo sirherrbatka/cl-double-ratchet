@@ -90,12 +90,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (gethash message-number (cdr hash-table))
     (values nil nil)))
 
-(defun (setf skipped-message) (new-value skipped-messages chain-key message-number)
-  (alexandria:if-let ((hash-table (assoc (ironclad:curve25519-key-y chain-key)
+(defun (setf skipped-message) (new-value skipped-messages chain-key message-number &aux (vector (ironclad:curve25519-key-y chain-key)))
+  (alexandria:if-let ((hash-table (assoc vector
                                          (serapeum:unbox skipped-messages)
                                          :test #'serapeum:vector=)))
     (setf (gethash message-number (cdr hash-table)) new-value)
-    (push (cons (ironclad:curve25519-key-y chain-key)
+    (push (cons vector
                 (lret ((result (make-hash-table)))
                   (setf (gethash message-number result) new-value)))
           (serapeum:unbox skipped-messages)))
@@ -104,7 +104,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defun remove-skipped-message (skipped-messages chain-key message-number &aux (vector (ironclad:curve25519-key-y chain-key)))
   (alexandria:when-let ((hash-table (assoc vector
                                            (serapeum:unbox skipped-messages)
-                                         :test #'serapeum:vector=)))
+                                           :test #'serapeum:vector=)))
     (remhash message-number (cdr hash-table))
     (when (~> hash-table cdr hash-table-count zerop)
       (setf #1=(serapeum:unbox skipped-messages)
