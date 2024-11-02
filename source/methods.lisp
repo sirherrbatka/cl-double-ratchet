@@ -109,7 +109,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (kdf-rk (rk ratchet)
                     (exchange-25519-key (~> ratchet sending-keys)
                                         public-key))))
-      (setf (receive-key ratchet) public-key
+      (setf (received-key ratchet) public-key
             (root-key ratchet) rk
             (ckr ratchet) ckr
             (sending-keys ratchet) (make-25519-private-key)))
@@ -157,7 +157,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       (if vector
           (values vector start end)
           (progn
-            (skip-message (message-number message))
+            (skip-message double-ratchet (message-number message))
             (bind (((:values ciphertext start end) (message-content message)))
               (decrypt* (local-client double-ratchet)
                         (remote-client double-ratchet)
@@ -199,7 +199,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          (ratchet (~> double-ratchet local-client ratchet))
          (skipped (~> double-ratchet local-client skipped-messages)))
     (iterate
-      (while (< number-of-received-messages until))
+      (while (< (1+ number-of-received-messages) until))
       (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
       (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum)
             ckr chain-key)
