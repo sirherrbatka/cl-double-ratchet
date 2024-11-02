@@ -5,8 +5,7 @@
                #:serapeum
                #:ironclad
                #:metabang-bind
-               #:bordeaux-threads
-               #:cl-data-structures)
+               #:bordeaux-threads)
   :serial T
   :pathname "source"
   :components ((:file "package")
