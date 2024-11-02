@@ -78,7 +78,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (finding nil such-that (< a b))))
 
 (defun key-ordering (a b)
-  (or (< (car a) (car b))
-      (and (= (car a) (car b))
-           (vector< (ic:curve25519-key-y (cdr a))
-                    (ic:curve25519-key-y (cdr b))))))
+  (< a b))

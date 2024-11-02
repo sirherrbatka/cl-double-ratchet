@@ -41,8 +41,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defgeneric long-term-identity-key (client))
 (defgeneric signed-pre-key (client))
 (defgeneric exchange-keys* (this-client other-client))
-(defgeneric encrypt* (this-client other-client message start end))
-(defgeneric decrypt* (this-client other-client cipher-text start end))
+(defgeneric encrypt* (this-client message start end))
+(defgeneric decrypt* (this-client cipher-text start end))
 (defgeneric dh-ratchet (this-client
                         public-key
                         number-of-sent-messages

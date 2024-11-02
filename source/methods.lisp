@@ -23,7 +23,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (cl:in-package #:double-ratchet)
 
 
-(defmethod exchange-keys* ((client-a local-client)
+(defmethod exchange-keys* ((client-a client)
                            (client-b client))
   (if (vector< (~> client-a long-term-identity-key ic:curve25519-key-y)
                (~> client-b long-term-identity-key ic:curve25519-key-y))
@@ -63,7 +63,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   nil)
 
 (defmethod encrypt* ((this-client client)
-                     (other-client client)
                      message
                      start
                      end)
@@ -82,7 +81,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     message))
 
 (defmethod decrypt* ((this-client client)
-                     (other-client client)
                      ciphertext
                      start
                      end)
@@ -121,35 +119,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (cks ratchet) cks)))
   nil)
 
-(defmethod encrypt ((double-ratchet double-ratchet)
+(defmethod encrypt ((double-ratchet client)
                     message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (encrypt* (local-client double-ratchet)
-              (remote-client double-ratchet)
+    (encrypt* double-ratchet
               message
               0
               (length message))
     (make-message (message-class double-ratchet)
                   :sending-key (~> double-ratchet
-                                   local-client
                                    ratchet
                                    sending-keys
                                    get-public-key)
                   :content message
                   :number (~> double-ratchet
-                              local-client
                               ratchet
                               number-of-sent-messages)
                   :message-count-in-previous-sending-chain (~> double-ratchet
-                                                               local-client
                                                                ratchet
                                                                number-of-messages-in-previous-sending-chain))))
 
-(defmethod decrypt ((double-ratchet double-ratchet)
+(defmethod decrypt ((double-ratchet client)
                     message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (unless (~> double-ratchet local-client ratchet ckr)
-      (dh-ratchet (local-client double-ratchet)
+    (unless (~> double-ratchet ratchet ckr)
+      (dh-ratchet double-ratchet
                   (~> message message-sending-key)
                   (message-number message)
                   (message-count-in-previous-sending-chain message)))
@@ -159,15 +153,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           (progn
             (skip-message double-ratchet (message-number message))
             (bind (((:values ciphertext start end) (message-content message)))
-              (decrypt* (local-client double-ratchet)
-                        (remote-client double-ratchet)
+              (decrypt* double-ratchet
                         ciphertext start end)))))))
 
 (defmethod long-term-identity-remote-key ((object double-ratchet))
   (~> object remote-client long-term-identity-key get-public-key))
-
-(defmethod can-encrypt-p ((object double-ratchet))
-  (~> object local-client can-encrypt-p))
 
 (defmethod can-encrypt-p ((object client))
   (~> object ratchet cks null not))
@@ -176,31 +166,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (let ((result (read-message-content message)))
     (values result 0 (length result))))
 
-(defmethod try-skipped-messages ((double-ratchet double-ratchet) message)
+(defmethod try-skipped-messages ((double-ratchet client) message)
   (bind (((:values ciphertext start end) (message-content message))
          (number (message-number message))
-         (key (~> double-ratchet local-client ratchet received-key))
-         (index (cons number key))
+         (index number)
          ((:values message-key.iv found) (~> double-ratchet
-                                             local-client
                                              skipped-messages
                                              (cl-ds:at index))))
+
     (if found
         (bind (((message-key . iv) message-key.iv))
-          (~> double-ratchet local-client skipped-messages (cl-ds:erase! index))
+          (~> double-ratchet skipped-messages (cl-ds:erase! index))
           (decrypt-imlementation message-key iv ciphertext start end))
         nil)))
 
-(defmethod skip-message ((double-ratchet double-ratchet) until)
+(defmethod skip-message ((double-ratchet client) until)
   (bind (((:accessors (number-of-received-messages number-of-received-messages)
                       (constant constant)
+                      (received-key received-key)
                       (ckr ckr))
-          (~> double-ratchet local-client ratchet))
-         (ratchet (~> double-ratchet local-client ratchet))
-         (skipped (~> double-ratchet local-client skipped-messages)))
+          (~> double-ratchet ratchet))
+         (ratchet (~> double-ratchet ratchet))
+         (skipped (~> double-ratchet skipped-messages)))
     (iterate
       (while (< (1+ number-of-received-messages) until))
       (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
       (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum)
-            ckr chain-key)
-      (setf (cl-ds:at skipped (cons number-of-received-messages chain-key)) (cons message-key iv)))))
+            (cl-ds:at skipped number-of-received-messages) (cons message-key iv)
+            ckr chain-key))))

@@ -80,7 +80,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    :constant (ic:make-random-salt 0)))
 
 (defclass client ()
-  ((%long-term-identity-key :initarg :long-term-identity-key
+  ((%lock :initarg :lock
+          :reader lock)
+   (%long-term-identity-key :initarg :long-term-identity-key
                             :reader long-term-identity-key)
    (%ephemeral-key-1 :initarg :ephemeral-key-1
                      :accessor ephemeral-key-1)
@@ -97,8 +99,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (%skipped-messages :initarg :skipped-messages
                       :reader skipped-messages)
    (%ratchet :initarg :ratchet
-             :accessor ratchet))
+             :accessor ratchet)
+   (%message-class :initarg :message-class
+                   :reader message-class))
   (:default-initargs
+   :lock (bt2:make-lock)
+   :message-class 'message
    :skipped-messages (cl-ds.dicts.skip-list:make-mutable-skip-list-dictionary #'key-ordering
                                                                               #'equalp)
    :keys (make-25519-private-key)
@@ -108,35 +114,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    :ephemeral-key-3 (make-25519-private-key)
    :ephemeral-key-4 (make-25519-private-key)
    :long-term-identity-key (make-25519-private-key)))
-
-(defclass remote-client (client)
-  ())
-
-(defclass local-client (client)
-  ())
-
-(defclass session ()
-  ((%this-client :initarg :this-client
-                 :reader this-client)
-   (%other-client :initarg :other-client
-                  :reader other-client)))
-
-(defclass double-ratchet ()
-  ((%lock
-    :initarg :lock
-    :reader lock)
-   (%local-client
-    :initarg :local-client
-    :accessor local-client)
-   (%remote-client
-    :initarg :remote-client
-    :accessor remote-client)
-   (%message-class
-    :initarg :message-class
-    :reader message-class))
-  (:default-initargs
-   :message-class 'message
-   :lock (bt2:make-lock)))
 
 (defclass message ()
   ((%sending-key
