@@ -168,15 +168,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmethod try-skipped-messages ((double-ratchet client) message)
   (bind (((:values ciphertext start end) (message-content message))
-         (number (message-number message))
-         (index number)
          ((:values message-key.iv found) (~> double-ratchet
                                              skipped-messages
-                                             (cl-ds:at index))))
+                                             (skipped-message (message-sending-key message)
+                                                              (message-number message)))))
 
     (if found
         (bind (((message-key . iv) message-key.iv))
-          (~> double-ratchet skipped-messages (cl-ds:erase! index))
+          (~> double-ratchet skipped-messages (remove-skipped-message (message-sending-key message)
+                                                                      (message-number message)))
           (decrypt-imlementation message-key iv ciphertext start end))
         nil)))
 
@@ -192,5 +192,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       (while (< (1+ number-of-received-messages) until))
       (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
       (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum)
-            (cl-ds:at skipped number-of-received-messages) (cons message-key iv)
+            (skipped-message skipped received-key number-of-received-messages) (cons message-key iv)
             ckr chain-key))))

@@ -105,8 +105,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (:default-initargs
    :lock (bt2:make-lock)
    :message-class 'message
-   :skipped-messages (cl-ds.dicts.skip-list:make-mutable-skip-list-dictionary #'key-ordering
-                                                                              #'equalp)
+   :skipped-messages (make-skipped-messages)
    :keys (make-25519-private-key)
    :ratchet nil
    :ephemeral-key-1 (make-25519-private-key)
