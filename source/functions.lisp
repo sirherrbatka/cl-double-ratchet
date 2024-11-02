@@ -34,14 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (make-instance 'client
                  :long-term-identity-key long-term-identity-key))
 
-(defun make-remote-client (public-long-term-identity-key eph1 eph2 eph3 eph4)
-  (make-instance 'remote-client
-                 :long-term-identity-key (make-instance 'keys-pair :public public-long-term-identity-key)
-                 :ephemeral-key-1 (make-instance 'keys-pair :public eph1)
-                 :ephemeral-key-2 (make-instance 'keys-pair :public eph2)
-                 :ephemeral-key-3 (make-instance 'keys-pair :public eph3)
-                 :ephemeral-key-4 (make-instance 'keys-pair :public eph4)))
-
 (defun kdf-rk (rk dh-out)
   "Returns a pair (32-byte root key, 32-byte chain key) as the output of applying a KDF keyed by a 32-byte root key rk to a Diffie-Hellman output dh-out."
   (let ((output (ic:derive-key (ic:make-kdf :hmac-kdf :digest :sha256)
