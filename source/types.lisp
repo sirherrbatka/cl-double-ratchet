@@ -96,8 +96,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                      :accessor ephemeral-key-4)
    (%shared-key :initarg :shared-key
                 :reader shared-key)
-   (%keys :initarg :keys
-          :accessor keys)
    (%skipped-messages :initarg :skipped-messages
                       :reader skipped-messages)
    (%ratchet :initarg :ratchet
@@ -109,7 +107,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    :other-client-public-key nil
    :message-class 'message
    :skipped-messages (make-skipped-messages)
-   :keys (make-25519-private-key)
    :ratchet nil
    :ephemeral-key-1 (make-25519-private-key)
    :ephemeral-key-2 (make-25519-private-key)
