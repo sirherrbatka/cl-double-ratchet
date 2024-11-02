@@ -65,7 +65,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           start
           (+ start (aref ciphertext (1- end)))))
 
-(defun new-sending-ratchet (client)
+(defun new-sending-chain (client)
   (bt2:with-lock-held ((lock client))
     (bind ((sk (shared-key client))
            (sending-keys (make-25519-private-key))
@@ -93,7 +93,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                       (~> other-client long-term-identity-key get-public-key))))
         (setf (slot-value this-client '%shared-key) (concatenate '(simple-array (unsigned-byte 8) (*)) dh1 dh2 dh3 dh4)
               (slot-value this-client '%other-client-public-key) (~> other-client long-term-identity-key get-public-key))
-        (new-sending-ratchet this-client))
+        (new-sending-chain this-client))
       (let* ((dh1 (exchange-25519-key (~> this-client ephemeral-key-1)
                                       (~> other-client long-term-identity-key get-public-key)))
              (dh2 (exchange-25519-key (~> this-client long-term-identity-key)
@@ -199,7 +199,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           (decrypt-imlementation message-key iv ciphertext start end))
         nil)))
 
-(defun skip-message (double-ratchet until)
+(defun skip-message (double-ratchet count)
   (bind (((:accessors (number-of-received-messages number-of-received-messages)
                       (constant constant)
                       (received-key received-key)
@@ -208,7 +208,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          (ratchet (~> double-ratchet ratchet))
          (skipped (~> double-ratchet skipped-messages)))
     (iterate
-      (while (< (1+ number-of-received-messages) until))
+      (repeat count)
       (for (values chain-key message-key iv) = (kdf-ck ratchet ckr))
       (setf number-of-received-messages (mod (1+ number-of-received-messages) most-positive-fixnum)
             (skipped-message skipped received-key number-of-received-messages) (cons message-key iv)
@@ -223,11 +223,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (when (or (~> double-ratchet ratchet ckr null)
                       (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
                                              (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
-              (skip-message double-ratchet (message-count-in-previous-sending-chain message))
+              (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
+                                              (~> double-ratchet ratchet number-of-received-messages)))
               (dh-ratchet double-ratchet
                           (~> message message-sending-key)
                           (message-number message)))
-            (skip-message double-ratchet (message-number message))
+            (skip-message double-ratchet
+                          (- (message-number message)
+                             (~> double-ratchet ratchet number-of-received-messages)
+                             1))
             (bind (((:values ciphertext start end) (message-content message)))
               (decrypt* double-ratchet
                         ciphertext start end)))))))
