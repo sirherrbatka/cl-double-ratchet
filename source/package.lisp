@@ -32,28 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (#:a #:alexandria)
    (#:ic #:ironclad))
   (:export
-   #:make-local-client
-   #:make-remote-client
-   #:client-public-keys
-   #:serial-public-key
-   #:serial-private-key
-   #:serial-keys-pair
+   #:make-client
    #:encrypt
-   #:make-25519-keys
-   #:remote-client
-   #:make-double-ratchet
    #:decrypt
-   #:x
-   #:y
-   #:ironclad<-pantalea
-   #:pantalea<-ironclad
-   #:can-encrypt-p
-   #:pkcs7-pad
-   #:pkcs7-unpad
-   #:long-term-identity-remote-key
-   #:make-padded-vector-for-length
-   #:make-25519-private-key
-   #:make-25519-public-key
-   #:long-term-identity-key
-   #:private
-   #:public))
+   #:make-message
+   #:message-number
+   #:message-sending-key
+   #:message-count-in-previous-sending-chain
+   #:message-content
+   ))

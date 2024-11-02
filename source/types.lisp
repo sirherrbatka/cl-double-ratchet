@@ -72,7 +72,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :initform 0)
    (%constant
     :initarg :constant
-    :reader constant))
+    :reader constant)
+   )
   (:default-initargs
    :number-of-sent-messages 0
    :number-of-received-messages 0
@@ -82,6 +83,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defclass client ()
   ((%lock :initarg :lock
           :reader lock)
+   (%other-client-public-key :initarg :other-client-public-key
+                             :reader other-client-public-key)
    (%long-term-identity-key :initarg :long-term-identity-key
                             :reader long-term-identity-key)
    (%ephemeral-key-1 :initarg :ephemeral-key-1
@@ -104,6 +107,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                    :reader message-class))
   (:default-initargs
    :lock (bt2:make-lock)
+   :other-client-public-key nil
    :message-class 'message
    :skipped-messages (make-skipped-messages)
    :keys (make-25519-private-key)

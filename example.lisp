@@ -6,8 +6,8 @@
 (defparameter *client-a* (make-client (make-25519-private-key)))
 (defparameter *client-b* (make-client (make-25519-private-key)))
 
-(exchange-keys* *client-a* *client-b*)
-(exchange-keys* *client-b* *client-a*)
+(exchange-keys *client-a* *client-b*)
+(exchange-keys *client-b* *client-a*)
 
 (unless (can-encrypt-p *client-a*)
   (rotatef *client-a* *client-b*))
