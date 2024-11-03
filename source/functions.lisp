@@ -80,6 +80,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                                                                    0)
                                    :sending-keys sending-keys)))))
 
+(defun reset-receiving-chain (client)
+  (setf (ratchet client) (make 'ratchet
+                               :root-key (shared-key client)
+                               :sending-keys (long-term-identity-key client))))
+
 (defun exchange-keys (this-client other-client)
   (if (vector< (~> this-client long-term-identity-key ic:curve25519-key-y)
                (~> other-client long-term-identity-key ic:curve25519-key-y))
@@ -103,10 +108,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
              (dh4 (exchange-25519-key (~> this-client long-term-identity-key)
                                       (~> other-client ephemeral-key-4 get-public-key))))
         (setf (slot-value this-client '%shared-key) (concatenate '(simple-array (unsigned-byte 8) (*)) dh1 dh2 dh3 dh4)
-              (slot-value this-client '%other-client-public-key) (~> other-client long-term-identity-key get-public-key)
-              (ratchet this-client) (make 'ratchet
-                                          :root-key (slot-value this-client '%shared-key)
-                                          :sending-keys (~> this-client long-term-identity-key)))))
+              (slot-value this-client '%other-client-public-key) (~> other-client long-term-identity-key get-public-key))
+        (reset-receiving-chain this-client)))
   nil)
 
 (defun encrypt* (this-client
@@ -225,6 +228,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                              (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
               (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
                                               (~> double-ratchet ratchet number-of-received-messages)))
+              (unless (~> double-ratchet ratchet ckr null)
+                (reset-receiving-chain double-ratchet))
               (dh-ratchet double-ratchet
                           (~> message message-sending-key)
                           (message-number message)))
