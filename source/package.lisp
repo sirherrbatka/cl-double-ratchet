@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:message-sending-key
    #:message-count-in-previous-sending-chain
    #:new-sending-chain
+   #:validate-decryption
    #:message-content
    #:make-padded-vector
    #:can-encrypt-p

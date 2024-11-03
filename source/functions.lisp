@@ -137,6 +137,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key iv) (kdf-ck ratchet (ckr ratchet)))
          ((:values result start end) (decrypt-imlementation message-key iv ciphertext start end)))
+    (validate-decryption this-client result start end)
     (setf (ckr ratchet) chain-key
           #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
     (values result start end)))
@@ -221,7 +222,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bt2:with-lock-held ((lock double-ratchet))
     (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
       (if vector
-          (values vector start end)
+          (progn
+            (validate-decryption double-ratchet vector start end)
+            (values vector start end))
           (progn
             (when (or (~> double-ratchet ratchet ckr null)
                       (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
