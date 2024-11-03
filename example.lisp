@@ -17,7 +17,7 @@
 
 (defparameter *decrypted-1* (decrypt *client-b* *encrypted-1*))
 
-(new-sending-ratchet *client-a*)
+(new-sending-chain *client-a*)
 
 (defparameter *encrypted-2* (encrypt *client-a*
                                      (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))

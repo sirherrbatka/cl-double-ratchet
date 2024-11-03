@@ -137,10 +137,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key iv) (kdf-ck ratchet (ckr ratchet)))
          ((:values result start end) (decrypt-imlementation message-key iv ciphertext start end)))
-    (validate-decryption this-client result start end)
-    (setf (ckr ratchet) chain-key
-          #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
-    (values result start end)))
+    (multiple-value-prog1 (validate-decryption this-client result start end)
+      (setf (ckr ratchet) chain-key
+            #1=(number-of-received-messages ratchet) (mod (1+ #1#) most-positive-fixnum)))))
 
 (defun dh-ratchet (this-client
                    public-key
@@ -166,18 +165,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (cks ratchet) cks)))
   nil)
 
-(defun encrypt (double-ratchet
-                message)
+(defun encrypt (double-ratchet message &optional (start 0) (end (length message)))
   (bt2:with-lock-held ((lock double-ratchet))
+    (unless (can-encrypt-p double-ratchet)
+      (error 'cant-encrypt-yet))
     (encrypt* double-ratchet
               message
-              0
-              (length message))
+              start
+              end)
     (make-message (message-class double-ratchet)
                   :sending-key (~> double-ratchet
                                    ratchet
                                    sending-keys
                                    get-public-key)
+                  :start start
+                  :end end
                   :content message
                   :number (~> double-ratchet
                               ratchet
@@ -222,9 +224,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bt2:with-lock-held ((lock double-ratchet))
     (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
       (if vector
-          (progn
-            (validate-decryption double-ratchet vector start end)
-            (values vector start end))
+          (validate-decryption double-ratchet vector start end)
           (progn
             (when (or (~> double-ratchet ratchet ckr null)
                       (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)

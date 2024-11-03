@@ -32,21 +32,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (#:a #:alexandria)
    (#:ic #:ironclad))
   (:export
-   #:make-client
-   #:encrypt
+   #:can-encrypt-p
+   #:cant-encrypt-yet
+   #:client
+   #:client-public-keys
    #:decrypt
+   #:encrypt
+   #:make-25519-private-key
+   #:make-client
    #:make-message
+   #:make-padded-vector
+   #:make-padded-vector-for-length
+   #:message
+   #:message-content
+   #:message-count-in-previous-sending-chain
+   #:message-end
    #:message-number
    #:message-sending-key
-   #:message-count-in-previous-sending-chain
+   #:message-start
    #:new-sending-chain
-   #:validate-decryption
-   #:message-content
-   #:make-padded-vector
-   #:can-encrypt-p
+   #:padded-vector-size
    #:pkcs7-pad
    #:pkcs7-unpad
-   #:padded-vector-size
-   #:make-padded-vector-for-length
-   #:client-public-keys
+   #:validate-decryption
    ))

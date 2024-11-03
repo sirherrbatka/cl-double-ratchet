@@ -1,0 +1,31 @@
+#+title: cl-double-ratchet
+This library implements double ratchet algorithm (without header encryption) in portable common lisp. To start, create pair of clients and exchange keys.
+
+#+BEGIN_SRC
+(defparameter *client-a* (make-client (make-25519-private-key)))
+(defparameter *client-b* (make-client (make-25519-private-key)))
+(exchange-keys *client-a* *client-b*)
+(exchange-keys *client-b* *client-a*)
+#+END_SRC
+
+After this, one of those clients will be able to encrypt, which can be checked using CAN-ENCRYPT-P function. Assuming that it is client-a, use the following code to encrypt.
+
+#+BEGIN_SRC
+(defparameter *encrypted-1* (encrypt *client-a*
+                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+#+END_SRC
+
+ENCRYPT function requires input vectors to be padded, PCKS7-PAD and PKCS7-UNPAD functions are provided. Encryption is performed in place, content of the vector will be overrided. Returned object is of class MESSAGE, but this can be overriden MAKE-MESSAGE method (for instance to allow quicker and simpler serialization). Decryption is performed as follows:
+
+#+BEGIN_SRC
+(defparameter *decrypted-1* (decrypt *client-b* *encrypted-1*))
+#+END_SRC
+
+After this, client-b is fully initialized and capable of encryption.
+
+#+BEGIN_SRC
+(defparameter *encrypted-2* (encrypt *client-b*
+                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+#+END_SRC
+
+New sending chain is established using NEW-SENDING-CHAIN function. Usage of this function should be integrated into whatever networking protocol you are designing, as to prevent sending/receiving messages while new chain gets established. Also, after it gets constructed, don't forget to send some kind of handshake message to initialize the other client ratchet. To validate that message was decrypted correctly, implement VALIDATE-DECRYPTION method on your client subclass. By default this function simply returns the input. I advice to signal error there as a means to signal a problem with input to prevent corrupting ratchets.

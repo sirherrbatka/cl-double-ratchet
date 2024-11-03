@@ -126,4 +126,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :reader message-count-in-previous-sending-chain)
    (%content
     :initarg :content
-    :reader read-message-content)))
+    :reader read-message-content)
+   (%start
+    :initarg :start
+    :reader message-start)
+   (%end
+    :initarg :end
+    :reader message-end)))
+
+(define-condition cant-encrypt-yet (error)
+  ())

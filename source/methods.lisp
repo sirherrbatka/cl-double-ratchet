@@ -25,4 +25,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defmethod message-content ((message message))
   (let ((result (read-message-content message)))
-    (values result 0 (length result))))
+    (values result (message-start message) (message-end message))))
