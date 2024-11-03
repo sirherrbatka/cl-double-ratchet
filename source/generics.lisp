@@ -31,3 +31,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (:method (class-name &rest rest &key sending-key number message-count-in-previous-sending-chain content)
     (declare (ignore sending-key number message-count-in-previous-sending-chain content))
     (apply #'make class-name rest)))
+(defgeneric validate-decryption (client vector start end))

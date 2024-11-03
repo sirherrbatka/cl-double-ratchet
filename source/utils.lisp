@@ -43,25 +43,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (replace result initial-contents)
     result))
 
-(defun padded-vector-size (vector)
+(defun padded-vector-size (vector &optional (start 0) (end (length vector)))
   (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (let ((length (length vector)))
-    (if (zerop length)
-        0
-        (- length (aref vector (1- length))))))
+  (if (= start end)
+      0
+      (- end start (aref vector (1- end)))))
 
-(defun make-padded-vector (vector)
+(defun make-padded-vector (vector &optional (start 0) (end (length vector)))
   (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (make-padded-vector-for-length (length vector)))
+  (make-padded-vector-for-length (- end start)))
 
-(defun pkcs7-pad (vector)
+(defun pkcs7-pad (vector &optional (start 0) (end (length vector)))
   (declare (type (simple-array (unsigned-byte 8) (*)) vector))
   (lret ((result (make-padded-vector vector)))
-    (replace result vector)))
+    (replace result vector :start2 start :end2 end)))
 
-(defun pkcs7-unpad (vector)
+(defun pkcs7-unpad (vector &optional (start 0) (end (length vector)))
   (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (subseq vector 0 (padded-vector-size vector)))
+  (subseq vector start (padded-vector-size vector start end)))
 
 (defun get-public-key (key)
   (if (typep key 'ironclad:curve25519-public-key)
