@@ -103,3 +103,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (delete-if (alexandria:curry #'serapeum:vector= vector)
                        #1# :key #'car))))
   nil)
+
+(defun vector< (a b)
+  (iterate
+    (for ea in-vector a)
+    (for eb in-vector b)
+    (finding t such-that (< ea eb))
+    (finding nil such-that (> ea eb))))

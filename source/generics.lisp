@@ -32,5 +32,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (declare (ignore sending-key number message-count-in-previous-sending-chain content start end))
     (apply #'make class-name rest)))
 (defgeneric validate-decryption (client vector start end)
-  (:method ((client client) vector start end)
+  (:method (client vector start end)
     (values vector start end)))
