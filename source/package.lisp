@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:encrypt
    #:make-25519-private-key
    #:make-client
-   #:make-message
    #:make-padded-vector
    #:make-padded-vector-for-length
    #:message
@@ -55,4 +54,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:pkcs7-pad
    #:pkcs7-unpad
    #:validate-decryption
+   #:authenticate
+   #:verify
    ))
