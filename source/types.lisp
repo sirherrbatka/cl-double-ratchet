@@ -132,7 +132,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     :reader message-start)
    (%end
     :initarg :end
-    :reader message-end)))
+    :reader message-end)
+   (%expected-tag
+    :initarg :expected-tag
+    :initform nil
+    :reader expected-tag)
+   (%associated-data
+    :initarg :associated-data
+    :initform nil
+    :reader associated-data)))
 
 (define-condition cant-encrypt-yet (error)
+  ())
+
+(define-condition cant-verify (error)
   ())

@@ -49,11 +49,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:message-number
    #:message-sending-key
    #:message-start
+   #:cant-verify
    #:new-sending-chain
    #:padded-vector-size
    #:pkcs7-pad
    #:pkcs7-unpad
    #:validate-decryption
-   #:authenticate
-   #:verify
+   #:associated-data
+   #:expected-tag
    ))
