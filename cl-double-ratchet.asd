@@ -9,6 +9,7 @@
   :serial T
   :pathname "source"
   :components ((:file "package")
+               (:file "macros")
                (:file "generics")
                (:file "utils")
                (:file "types")

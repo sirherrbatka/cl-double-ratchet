@@ -53,11 +53,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (values (subseq output 0 32) (subseq output 32 64) (subseq output 64))))
 
 (defun decrypt-imlementation (message-key iv ciphertext start end)
-  (ic:decrypt-in-place (ic:make-authenticated-encryption-mode :gcm 
-                                                              :cipher-name :aes 
-                                                              :key message-key 
+  (ic:decrypt-in-place (ic:make-authenticated-encryption-mode :gcm
+                                                              :cipher-name :aes
+                                                              :key message-key
                                                               :initialization-vector iv)
-                       
+
                        ciphertext
                        :start start
                        :end end)
@@ -120,9 +120,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          ((:values chain-key message-key initialization-vector) (kdf-ck ratchet (cks ratchet))))
     (setf #1=(number-of-sent-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
     (setf (cks ratchet) chain-key)
-    (ic:encrypt-in-place (ic:make-authenticated-encryption-mode :gcm 
-                                                                :cipher-name :aes 
-                                                                :key message-key 
+    (ic:encrypt-in-place (ic:make-authenticated-encryption-mode :gcm
+                                                                :cipher-name :aes
+                                                                :key message-key
                                                                 :initialization-vector initialization-vector)
                          message
                          :start start
@@ -219,29 +219,62 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             (skipped-message skipped received-key number-of-received-messages) (cons message-key iv)
             ckr chain-key))))
 
+(defmacro with-ratchet-undo ((client) &body body)
+  (a:once-only (client)
+    (a:with-gensyms (!number-of-messages-in-previous-sending-chain
+                     !number-of-sent-messages
+                     !number-of-received-messages
+                     !received-key
+                     !root-key
+                     !ckr
+                     !sending-keys
+                     !ratchet
+                     !cks)
+      `(let* ((,!ratchet (ratchet ,client))
+              (,!number-of-messages-in-previous-sending-chain (number-of-messages-in-previous-sending-chain ,!ratchet))
+              (,!number-of-sent-messages (number-of-sent-messages ,!ratchet))
+              (,!number-of-received-messages (number-of-received-messages ,!ratchet))
+              (,!received-key (received-key ,!ratchet))
+              (,!root-key (root-key ,!ratchet))
+              (,!ckr (ckr ,!ratchet))
+              (,!sending-keys (sending-keys ,!ratchet))
+              (,!cks (cks ,!ratchet)))
+         (flet ((undo ()
+                  (setf (number-of-messages-in-previous-sending-chain ,!ratchet) ,!number-of-messages-in-previous-sending-chain
+                        (number-of-sent-messages ,!ratchet) ,!number-of-sent-messages
+                        (number-of-received-messages ,!ratchet) ,!number-of-received-messages
+                        (received-key ,!ratchet) ,!received-key
+                        (root-key ,!ratchet) ,!root-key
+                        (ckr ,!ratchet) ,!ckr
+                        (sending-keys ,!ratchet) ,!sending-keys
+                        (cks ,!ratchet) ,!cks)))
+           (declare (ignorable (function undo)))
+           ,@body)))))
+
 (defun decrypt (double-ratchet message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
-      (if vector
-          (validate-decryption double-ratchet vector start end)
-          (progn
-            (when (or (~> double-ratchet ratchet ckr null)
-                      (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
-                                             (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
-              (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
-                                              (~> double-ratchet ratchet number-of-received-messages)))
-              (unless (~> double-ratchet ratchet ckr null)
-                (reset-receiving-chain double-ratchet))
-              (dh-ratchet double-ratchet
-                          (~> message message-sending-key)
-                          (message-number message)))
-            (skip-message double-ratchet
-                          (- (message-number message)
-                             (~> double-ratchet ratchet number-of-received-messages)
-                             1))
-            (bind (((:values ciphertext start end) (message-content message)))
-              (decrypt* double-ratchet
-                        ciphertext start end)))))))
+    (with-ratchet-undo (double-ratchet)
+      (bind (((:values vector start end) (try-skipped-messages double-ratchet message)))
+        (if vector
+            (validate-decryption double-ratchet vector start end)
+            (progn
+              (when (or (~> double-ratchet ratchet ckr null)
+                        (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
+                                               (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
+                (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
+                                                (~> double-ratchet ratchet number-of-received-messages)))
+                (unless (~> double-ratchet ratchet ckr null)
+                  (reset-receiving-chain double-ratchet))
+                (dh-ratchet double-ratchet
+                            (~> message message-sending-key)
+                            (message-number message)))
+              (skip-message double-ratchet
+                            (- (message-number message)
+                               (~> double-ratchet ratchet number-of-received-messages)
+                               1))
+              (bind (((:values ciphertext start end) (message-content message)))
+                (decrypt* double-ratchet
+                          ciphertext start end))))))))
 
 (defun authenticate* (this-client associated-data)
   (bind ((ratchet (ratchet this-client))
@@ -292,17 +325,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 (expected-tag (make-array 16 :element-type '(unsigned-byte 8))))
             (ic:produce-tag cipher :tag expected-tag)
             (if (vector= received-tag expected-tag)
-                (values t :success)          
-                (values nil :invalid-tag)))) 
+                (values t :success)
+                (values nil :invalid-tag))))
         (values nil :not-found))))
 
 (defun verify* (this-client associated-data received-tag)
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key initialization-vector)
           (kdf-ck ratchet (ckr ratchet))))
-    (let* ((cipher (ic:make-authenticated-encryption-mode :gcm 
-                                                          :cipher-name :aes 
-                                                          :key message-key 
+    (let* ((cipher (ic:make-authenticated-encryption-mode :gcm
+                                                          :cipher-name :aes
+                                                          :key message-key
                                                           :initialization-vector initialization-vector))
            (expected-tag (make-array 16 :element-type '(unsigned-byte 8))))
       (when associated-data
@@ -315,25 +348,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defun verify (double-ratchet message)
   (bt2:with-lock-held ((lock double-ratchet))
-    (bind (((:values skipped-processed status)
-            (try-skipped-authentications double-ratchet message)))
-      (declare (ignore skipped-processed))
-      (cond
-        ((eq status :success) t)
-        ((eq status :invalid-tag) nil) 
-        ((eq status :not-found)
-         (when (or (~> double-ratchet ratchet ckr null)
-                   (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
-                                          (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
-           (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
-                                           (~> double-ratchet ratchet number-of-received-messages)))
-           (unless (~> double-ratchet ratchet ckr null)
-             (reset-receiving-chain double-ratchet))
-           (dh-ratchet double-ratchet
-                       (message-sending-key message)
-                       (message-number message)))
-         (skip-message double-ratchet
-                       (- (message-number message)
-                          (~> double-ratchet ratchet number-of-received-messages)
-                          1))
-         (verify* double-ratchet nil (read-message-content message)))))))
+    (with-ratchet-undo (double-ratchet)
+      (bind (((:values skipped-processed status)
+              (try-skipped-authentications double-ratchet message)))
+        (declare (ignore skipped-processed))
+        (cond
+          ((eq status :success) t)
+          ((eq status :invalid-tag) nil)
+          ((eq status :not-found)
+           (when (or (~> double-ratchet ratchet ckr null)
+                     (not (serapeum:vector= (~> message message-sending-key ironclad:curve25519-key-y)
+                                            (~> double-ratchet ratchet received-key ironclad:curve25519-key-y))))
+             (skip-message double-ratchet (- (message-count-in-previous-sending-chain message)
+                                             (~> double-ratchet ratchet number-of-received-messages)))
+             (unless (~> double-ratchet ratchet ckr null)
+               (reset-receiving-chain double-ratchet))
+             (dh-ratchet double-ratchet
+                         (message-sending-key message)
+                         (message-number message)))
+           (skip-message double-ratchet
+                         (- (message-number message)
+                            (~> double-ratchet ratchet number-of-received-messages)
+                            1))
+           (verify* double-ratchet nil (read-message-content message))))))))
