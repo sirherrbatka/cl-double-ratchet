@@ -147,3 +147,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (define-condition cant-verify (error)
   ())
+
+(define-condition keys-not-equal-in-length (error)
+  ())

@@ -60,7 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     (when associated-data
       (ironclad:process-associated-data aead associated-data))
     (ic:decrypt-in-place aead ciphertext :start start :end end)
-    (unless (and associated-data (vector= expected-tag (ironclad:produce-tag aead)))
+    (unless (or (null associated-data) (vector= expected-tag (ironclad:produce-tag aead)))
       (error 'cant-verify))
     (values ciphertext
             start
@@ -87,7 +87,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                                :sending-keys (long-term-identity-key client))))
 
 (defun exchange-keys (this-client other-client)
-  (if (vector< (~> this-client long-term-identity-key ic:curve25519-key-y)
+  (if (key< (~> this-client long-term-identity-key ic:curve25519-key-y)
                (~> other-client long-term-identity-key ic:curve25519-key-y))
       (let* ((dh1 (exchange-25519-key (~> this-client long-term-identity-key)
                                       (~> other-client ephemeral-key-1 get-public-key)))
@@ -260,6 +260,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                     (decrypt* double-ratchet ciphertext start end
                               (expected-tag message)
                               (associated-data message))))))
-        (cant-verify (e)
+        (error (e)
           (undo)
           (error e))))))

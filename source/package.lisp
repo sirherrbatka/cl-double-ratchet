@@ -40,8 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:encrypt
    #:make-25519-private-key
    #:make-client
-   #:make-padded-vector
-   #:make-padded-vector-for-length
    #:message
    #:message-content
    #:message-count-in-previous-sending-chain
@@ -51,10 +49,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:message-start
    #:cant-verify
    #:new-sending-chain
-   #:padded-vector-size
-   #:pkcs7-pad
-   #:pkcs7-unpad
    #:validate-decryption
+   #:make-octet-vector
+   #:keys-not-equal-in-length
    #:associated-data
    #:expected-tag
    ))

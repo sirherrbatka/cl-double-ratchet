@@ -13,22 +13,22 @@
   (rotatef *client-a* *client-b*))
 
 (defparameter *encrypted-1* (encrypt *client-a*
-                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
 
 (defparameter *decrypted-1* (decrypt *client-b* *encrypted-1*))
 
 (new-sending-chain *client-a*)
 
 (defparameter *encrypted-2* (encrypt *client-a*
-                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
 
 (defparameter *decrypted-2* (decrypt *client-b* *encrypted-2*))
 
 (defparameter *encrypted-3* (encrypt *client-b*
-                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
 
 (defparameter *encrypted-4* (encrypt *client-b*
-                                     (make-padded-vector-for-length 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
 
 (defparameter *decrypted-4* (decrypt *client-a* *encrypted-4*))
 

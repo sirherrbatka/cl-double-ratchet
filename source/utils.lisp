@@ -32,36 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 (defun exchange-25519-key (private-key public-key)
   (ic:diffie-hellman private-key public-key))
 
-(defun padding-bytes-count (length)
-  (- 16 (mod length 16)))
-
-(defun make-padded-vector-for-length (length &key initial-contents)
-  (let* ((padding-bytes-count (padding-bytes-count length))
-         (result (make-array (+ length padding-bytes-count)
-                             :element-type '(unsigned-byte 8)
-                             :initial-element padding-bytes-count)))
-    (replace result initial-contents)
-    result))
-
-(defun padded-vector-size (vector &optional (start 0) (end (length vector)))
-  (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (if (= start end)
-      0
-      (- end start (aref vector (1- end)))))
-
-(defun make-padded-vector (vector &optional (start 0) (end (length vector)))
-  (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (make-padded-vector-for-length (- end start)))
-
-(defun pkcs7-pad (vector &optional (start 0) (end (length vector)))
-  (declare (type (simple-array (unsigned-byte 8) (*)) vector))
-  (lret ((result (make-padded-vector vector)))
-    (replace result vector :start2 start :end2 end)))
-
-(defun pkcs7-unpad (vector &optional (start 0) (end (length vector)))
-  (check-type vector (simple-array (unsigned-byte 8) (*)))
-  (subseq vector start (padded-vector-size vector start end)))
-
 (defun get-public-key (key)
   (if (typep key 'ironclad:curve25519-public-key)
       key
@@ -104,9 +74,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                        #1# :key #'car))))
   nil)
 
-(defun vector< (a b)
+(defun key< (a b)
+  (unless (= (length a) (length b))
+    (error 'keys-not-equal-in-length))
   (iterate
     (for ea in-vector a)
     (for eb in-vector b)
     (finding t such-that (< ea eb))
     (finding nil such-that (> ea eb))))
+
+(defun make-octet-vector (size &rest args)
+  (apply #'make-array size :element-type '(unsigned-byte 8) args))
