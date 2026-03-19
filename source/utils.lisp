@@ -85,3 +85,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (defun make-octet-vector (size &rest args)
   (apply #'make-array size :element-type '(unsigned-byte 8) args))
+
+(defun make-tag-vector ()
+  (make-octet-vector 32))

@@ -13,7 +13,8 @@
   (rotatef *client-a* *client-b*))
 
 (defparameter *encrypted-1* (encrypt *client-a*
-                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+                                     (make-octet-vector 20 :initial-contents '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+                                     :associated-data (map-into (make-tag-vector) (lambda () (random (ash 1 8))))))
 
 (defparameter *decrypted-1* (decrypt *client-b* *encrypted-1*))
 

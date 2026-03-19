@@ -54,4 +54,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:keys-not-equal-in-length
    #:associated-data
    #:expected-tag
+   #:make-tag-vector
    ))
