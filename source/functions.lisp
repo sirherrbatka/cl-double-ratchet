@@ -30,9 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         (get-public-key (ephemeral-key-3 client))
         (get-public-key (ephemeral-key-4 client))))
 
-(defun make-client (long-term-identity-key)
-  (make-instance 'client
-                 :long-term-identity-key long-term-identity-key))
+(defun make-client (long-term-identity-key &rest all
+                    &key ephemeral-key-1 ephemeral-key-2 ephemeral-key-3 ephemeral-key-4)
+  (declare (ignore ephemeral-key-1 ephemeral-key-2 ephemeral-key-3 ephemeral-key-4))
+  (apply #'make-instance 'client
+         :long-term-identity-key long-term-identity-key
+         all))
 
 (defun kdf-rk (rk dh-out)
   "Returns a pair (32-byte root key, 32-byte chain key) as the output of applying a KDF keyed by a 32-byte root key rk to a Diffie-Hellman output dh-out."
