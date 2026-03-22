@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:decrypt
    #:encrypt
    #:make-25519-private-key
+   #:make-25519-public-key
+   #:exchange-keys
    #:make-client
    #:message
    #:message-content
