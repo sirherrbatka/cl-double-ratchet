@@ -55,4 +55,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:associated-data
    #:expected-tag
    #:make-tag-vector
+   #:long-term-identity-key
+   #:ephemeral-key-1
+   #:ephemeral-key-2
+   #:ephemeral-key-3
+   #:ephemeral-key-4
    ))
