@@ -136,11 +136,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    (%expected-tag
     :initarg :expected-tag
     :initform nil
-    :reader expected-tag)
+    :reader expected-tag
+    :reader message-expected-tag)
    (%associated-data
     :initarg :associated-data
     :initform nil
+    :reader message-associated-data
     :reader associated-data)))
+
+(defun make-message (sending-key number message-count-in-previous-sending-chain content
+                     &key (start 0) (end (length content)) expected-tag associated-data)
+  (make-instance 'message
+                 :sending-key sending-key
+                 :number number
+                 :message-count-in-previous-sending-chain message-count-in-previous-sending-chain
+                 :content content
+                 :start start
+                 :end end
+                 :expected-tag expected-tag
+                 :associated-data associated-data))
 
 (define-condition cant-encrypt-yet (error)
   ())

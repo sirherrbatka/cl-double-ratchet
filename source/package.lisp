@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:make-25519-public-key
    #:exchange-keys
    #:next-number-of-sent-messages
+   #:message-expected-tag
    #:make-client
    #:message
    #:message-content
@@ -63,4 +64,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:ephemeral-key-2
    #:ephemeral-key-3
    #:ephemeral-key-4
+   #:make-message
    ))
