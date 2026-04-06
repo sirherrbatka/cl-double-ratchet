@@ -116,6 +116,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         (reset-receiving-chain this-client)))
   nil)
 
+(defun next-number-of-sent-messages (this-client)
+  (mod (1+ (number-of-sent-messages (ratchet this-client))) most-positive-fixnum))
+
 (defun encrypt* (this-client
                  message
                  start
@@ -124,7 +127,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   (bind ((ratchet (ratchet this-client))
          ((:values chain-key message-key initialization-vector) (kdf-ck ratchet (cks ratchet)))
          (aead nil))
-    (setf #1=(number-of-sent-messages ratchet) (mod (1+ #1#) most-positive-fixnum))
+    (setf (number-of-sent-messages ratchet) (next-number-of-sent-messages this-client))
     (setf (cks ratchet) chain-key)
     (setf aead (ic:make-authenticated-encryption-mode :gcm
                                                       :cipher-name :aes

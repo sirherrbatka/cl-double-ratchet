@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    #:make-25519-private-key
    #:make-25519-public-key
    #:exchange-keys
+   #:next-number-of-sent-messages
    #:make-client
    #:message
    #:message-content
